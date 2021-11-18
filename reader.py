@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+import numpy as np
+
 
 class Reader:
 
@@ -14,6 +16,8 @@ class Reader:
 		self.train_data = {}
 		self.train_mfccs = {}
 		self.test_mfccs = {}
+		self.train_data_digits = []
+		self.test_data_blocks = []
 
 	def read(self):
 		# Read Test data from file
@@ -28,6 +32,7 @@ class Reader:
 
 		self.train_mfccs = self.convert_MFCCS(self.train_data)
 		self.test_mfccs = self.convert_MFCCS(self.test_data)
+		self.seperate_digits()
 
 	def parse_lines(self, lines):
 		i=0
@@ -68,10 +73,26 @@ class Reader:
 
 		plt.show()
 
+	def seperate_digits(self):
+		# Seperates blocks into digits
+		for i in range(10):
+			self.train_data_digits.append([])
+			self.test_data_blocks.append([])
+			for j in range(1,661):
+				for frame in self.train_data[660*i+j]:
+					self.train_data_digits[i].append(frame)
+			for j in range(1,221):
+				self.test_data_blocks[i].append([])
+				# Keep test data seperateed by both digits and blocks, necessary for ML Classification
+				self.test_data_blocks[i][j-1] = self.test_data[220*i+j].copy()	
+				
+
 def main():
 	r = Reader()
 	r.read()
-	r.plot(2200)
+	#r.plot(1)
+	print(r.test_data_blocks[9][219])
+
 
 if __name__ == "__main__":
 	main()
