@@ -84,14 +84,14 @@ class Reader:
 			for j in range(1,221):
 				self.test_data_blocks[i].append([])
 				# Keep test data seperateed by both digits and blocks, necessary for ML Classification
-				self.test_data_blocks[i][j-1] = self.test_data[220*i+j].copy()	
+				self.test_data_blocks[i][j-1] = list(self.test_data[220*i+j])	
 				
 
 def main():
 	r = Reader()
 	r.read()
-	#r.plot(1)
-	print(r.test_data_blocks[9][219])
+	#r.plot(660*7 + 1)
+	#print(r.test_data_blocks[9][219])
 
 
 if __name__ == "__main__":

@@ -12,42 +12,52 @@ class KMeansGMM:
 		self.test_data = test_data
 
 	def run(self, n_phonemes, n_init=10):
-		self.n_clusters = n_phonemes
-		self.kmeans = KMeans(init="k-means++", n_clusters=self.n_clusters, n_init=n_init, random_state=0)
-		self.cluster_centers = np.empty([10, self.n_clusters, 13])
-		self.covariances = np.empty([10, self.n_clusters, 13, 13])
-		self.counts = np.zeros([10, self.n_clusters])
+		self.n_clusters = list(n_phonemes)
+		self.cluster_centers = [None]*10
+		self.covariances = [None]*10
+		self.counts = [None]*10
 		self.total_frames = np.zeros([10])
 
 		for digit in range(10):
-			kfit = self.kmeans.fit(self.train_data[digit])
+			kmeans = KMeans(init="k-means++", n_clusters=self.n_clusters[digit], n_init=n_init, random_state=0)
+			kfit = kmeans.fit(self.train_data[digit])
+			centers = kfit.cluster_centers_
 			self.cluster_centers[digit] = kfit.cluster_centers_
 			labels = kfit.labels_
-			self.covariances[digit] = self._compute_cov(digit, labels)
+
+			self.covariances[digit] = self._compute_cov(digit, labels, self.n_clusters[digit])
+			self.counts[digit] = np.zeros([self.n_clusters[digit]])
 			for label in labels:
 				self.counts[digit][label] += 1
 				self.total_frames[digit] += 1
 
-		self.likelihoods = np.zeros([10, 220, 10])
-		self.classifications = np.zeros([10,220])
+		likelihoods = np.zeros([10, 220, 10])
+		classifications = np.zeros([10,220])
 		for class_digit in range(10):
 			for data_digit in range(10):
 				for j, block in enumerate(self.test_data[data_digit]):
-					self.likelihoods[data_digit][j][class_digit] = self._ml_classification_for_digit(block, class_digit)
+					likelihoods[data_digit][j][class_digit] = self._ml_classification_for_digit(block, 
+						class_digit, self.n_clusters[digit])
 
-		correct = 0
+		correct = np.zeros([10])
 		for digit in range(10):
 			for block in range(220):
-				self.classifications[digit][block] = np.argmax(self.likelihoods[digit][block])
-				if(self.classifications[digit][block] == digit):
-					correct+=1
+				classifications[digit][block] = np.argmax(likelihoods[digit][block])
+				if(classifications[digit][block] == digit):
+					correct[digit]+=1
 
-		print(self.classifications[0])
-		print("Accuracy: {}".format(correct/2200))
+		print(classifications[0])
 
-	def _compute_cov(self, digit, labels):
-		cov = np.empty([self.n_clusters, 13, 13])
-		clustered_data = [[]]*self.n_clusters
+		total_correct = 0;
+		print("Accuracy Per Digit: ")
+		for digit in range(10):
+			total_correct+=correct[digit]
+			print(f"    Digit {digit}: {correct[digit]/220}")
+		print("Total Accuracy: {}".format(correct/2200))
+
+	def _compute_cov(self, digit, labels, clusters):
+		cov = np.empty([clusters, 13, 13])
+		clustered_data = [[]]*clusters
 		for i, frame in enumerate(self.train_data[digit]):
 			classification = labels[i]
 			clustered_data[classification].append(frame)
@@ -55,16 +65,16 @@ class KMeansGMM:
 			cov[i] = np.cov(cluster, rowvar=False)
 		return cov
 
-	def _ml_classification_for_digit(self, block, digit):
+	def _ml_classification_for_digit(self, block, digit, clusters):
 		# Using formula from project guidance
 		likelihood = 1
-		pi = np.zeros([self.n_clusters])
-		for m in range(self.n_clusters):
+		pi = np.zeros([clusters])
+		for m in range(clusters):
 			pi[m] = self.counts[digit][m]/self.total_frames[digit]
 
 		for i, frame in enumerate(block):
 			total = 0
-			for m in range(self.n_clusters):
+			for m in range(clusters):
 				pdf = multivariate_normal.pdf(frame, 
 					mean=self.cluster_centers[digit][m], 
 					cov=self.covariances[digit][m])
@@ -78,7 +88,15 @@ def main():
 	r = Reader()
 	r.read()
 	k = KMeansGMM(r.train_data_digits, r.test_data_blocks)
-	k.run(n_phonemes=5)
+	const_phonemes = [5, 5, 5, 5, 5, 5, 5, 5, 5, 5] # Constant number of clusters
+	phonemes = [4, 4, 5, 5, 6, 4, 4, 4, 6, 3] # Phonemes for digits 0 through 9
+	phonemes_transitions = [2*p for p in phonemes] # Phonemes + Transitions
+	print("Results for 5 Clusters:\n")
+	k.run(n_phonemes=const_phonemes)
+	print("Results for Clusters = Phonemes:\n")
+	k.run(n_phonemes=phonemes)
+	print("Results for Clusters = Phonemes + Transitions:\n")
+	k.run(n_phonemes=phonemes_transitions)
 
 if __name__ == "__main__":
 	main()
