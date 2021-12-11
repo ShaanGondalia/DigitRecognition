@@ -4,6 +4,7 @@ from sklearn.cluster import KMeans
 from scipy.stats import multivariate_normal
 from reader import Reader
 import math
+import time
 
 
 class KMeansGMM:
@@ -19,6 +20,7 @@ class KMeansGMM:
 		self.total_frames = np.zeros([10])
 
 		for digit in range(10):
+			start = time.time()
 			kmeans = KMeans(init="k-means++", n_clusters=self.n_clusters[digit], n_init=n_init, random_state=0)
 			kfit = kmeans.fit(self.train_data[digit])
 			centers = kfit.cluster_centers_
@@ -35,25 +37,31 @@ class KMeansGMM:
 		classifications = np.zeros([10,220])
 		for class_digit in range(10):
 			for data_digit in range(10):
+				start = time.time()	
 				for j, block in enumerate(self.test_data[data_digit]):
 					likelihoods[data_digit][j][class_digit] = self._ml_classification_for_digit(block, 
 						class_digit, self.n_clusters[digit])
+				end = time.time()
+				print(f"Digit blocks: {end-start}")
 
 		correct = np.zeros([10])
+		confusion_matrix = np.zeros([10, 10])
 		for digit in range(10):
 			for block in range(220):
-				classifications[digit][block] = np.argmax(likelihoods[digit][block])
+				classification = np.argmax(likelihoods[digit][block])
+				classifications[digit][block] = classification
+				confusion_matrix[digit][classification] += 1
 				if(classifications[digit][block] == digit):
 					correct[digit]+=1
 
-		print(classifications[0])
-
+		print("Confusion Matrix: ")
+		print(confusion_matrix)
 		total_correct = 0;
 		print("Accuracy Per Digit: ")
 		for digit in range(10):
 			total_correct+=correct[digit]
 			print(f"    Digit {digit}: {correct[digit]/220}")
-		print("Total Accuracy: {}".format(correct/2200))
+		print(f"Total Accuracy: {total_correct/2200}\n")
 
 	def _compute_cov(self, digit, labels, clusters):
 		cov = np.empty([clusters, 13, 13])
