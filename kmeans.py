@@ -8,21 +8,38 @@ import time
 
 
 class KMeansGMM:
-	def __init__(self, train_data, test_data):
+	def __init__(self, train_data, test_data, train_data_male, train_data_female, test_data_male, test_data_female):
 		self.train_data = train_data
 		self.test_data = test_data
+		self.train_data_male = train_data_male
+		self.train_data_female = train_data_female
+		self.test_data_male = test_data_male
+		self.test_data_female = test_data_female
 
-	def run(self, n_phonemes, n_init=10):
+	def run(self, n_phonemes, n_init=10, gender="all"):
 		self.n_clusters = list(n_phonemes)
 		self.cluster_centers = [None]*10
 		self.covariances = [None]*10
 		self.counts = [None]*10
 		self.total_frames = np.zeros([10])
 
+		if gender=="male":
+			train_data = self.train_data_male
+			test_data = self.test_data_male
+			num_blocks = 110
+		elif gender=="female":
+			train_data = self.train_data_female
+			test_data = self.test_data_female
+			num_blocks = 110
+		else:
+			train_data = self.train_data
+			test_data = self.test_data
+			num_blocks = 220
+
 		for digit in range(10):
 			start = time.time()
 			kmeans = KMeans(init="k-means++", n_clusters=self.n_clusters[digit], n_init=n_init, random_state=0)
-			kfit = kmeans.fit(self.train_data[digit])
+			kfit = kmeans.fit(train_data[digit])
 			centers = kfit.cluster_centers_
 			self.cluster_centers[digit] = kfit.cluster_centers_
 			labels = kfit.labels_
@@ -33,12 +50,12 @@ class KMeansGMM:
 				self.counts[digit][label] += 1
 				self.total_frames[digit] += 1
 
-		likelihoods = np.zeros([10, 220, 10])
-		classifications = np.zeros([10,220])
+		likelihoods = np.zeros([10, num_blocks, 10])
+		classifications = np.zeros([10,num_blocks])
 		for class_digit in range(10):
 			for data_digit in range(10):
 				start = time.time()	
-				for j, block in enumerate(self.test_data[data_digit]):
+				for j, block in enumerate(test_data[data_digit]):
 					likelihoods[data_digit][j][class_digit] = self._ml_classification_for_digit(block, 
 						class_digit, self.n_clusters[digit])
 				end = time.time()
@@ -47,7 +64,7 @@ class KMeansGMM:
 		correct = np.zeros([10])
 		confusion_matrix = np.zeros([10, 10])
 		for digit in range(10):
-			for block in range(220):
+			for block in range(num_blocks):
 				classification = np.argmax(likelihoods[digit][block])
 				classifications[digit][block] = classification
 				confusion_matrix[digit][classification] += 1
@@ -60,8 +77,8 @@ class KMeansGMM:
 		print("Accuracy Per Digit: ")
 		for digit in range(10):
 			total_correct+=correct[digit]
-			print(f"    Digit {digit}: {correct[digit]/220}")
-		print(f"Total Accuracy: {total_correct/2200}\n")
+			print(f"    Digit {digit}: {correct[digit]/num_blocks}")
+		print(f"Total Accuracy: {total_correct/(num_blocks*10)}\n")
 
 	def _compute_cov(self, digit, labels, clusters):
 		cov = np.empty([clusters, 13, 13])
@@ -95,16 +112,18 @@ def main():
 	#np.set_printoptions(threshold=sys.maxsize)
 	r = Reader()
 	r.read()
-	k = KMeansGMM(r.train_data_digits, r.test_data_blocks)
-	const_phonemes = [5, 5, 5, 5, 5, 5, 5, 5, 5, 5] # Constant number of clusters
-	phonemes = [4, 4, 5, 5, 6, 4, 4, 4, 6, 3] # Phonemes for digits 0 through 9
+	k = KMeansGMM(r.train_data_digits, r.test_data_blocks, 
+		r.train_data_digits_male, r.train_data_digits_female,
+		r.test_data_blocks_male, r.test_data_blocks_female)
+	const_phonemes = [6]*10 # Constant number of clusters
+	phonemes = [4, 4, 5, 5, 5, 4, 4, 4, 5, 4] # Phonemes for digits 0 through 9
 	phonemes_transitions = [2*p for p in phonemes] # Phonemes + Transitions
 	print("Results for 5 Clusters:\n")
 	k.run(n_phonemes=const_phonemes)
-	print("Results for Clusters = Phonemes:\n")
-	k.run(n_phonemes=phonemes)
-	print("Results for Clusters = Phonemes + Transitions:\n")
-	k.run(n_phonemes=phonemes_transitions)
+	#print("Results for Clusters = Phonemes:")
+	#k.run(n_phonemes=phonemes)
+	#print("Results for Clusters = Phonemes + Transitions:")
+	#k.run(n_phonemes=phonemes_transitions)
 
 if __name__ == "__main__":
 	main()

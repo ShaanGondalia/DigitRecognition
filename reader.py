@@ -18,6 +18,10 @@ class Reader:
 		self.test_mfccs = {}
 		self.train_data_digits = []
 		self.test_data_blocks = []
+		self.train_data_digits_male = []
+		self.train_data_digits_female = []
+		self.test_data_blocks_male = []
+		self.test_data_blocks_female = []
 
 	def read(self):
 		# Read Test data from file
@@ -59,14 +63,14 @@ class Reader:
 		return ret
 
 	def plot(self, block):
-		plt.title('MFCC vs Frame Index - Block {}'.format(block))
-		plt.xlabel('Frame')
+		plt.title(f'MFCC vs Frame Index - Digit {int((block-1)/660)} Block {block%660}')
+		plt.xlabel('Frame Index')
 		plt.ylabel('MFCC')
 		plt.grid(alpha=.4,linestyle='--')
 
 		for i in range(13):
 			plt.plot(range(len(self.train_mfccs[block][i])), self.train_mfccs[block][i],
-				c=self.MFCC_COLORS[i], label='MFCC{}'.format(i+1))
+				c=self.MFCC_COLORS[i], label=f'MFCC{i+1}')
 
 		plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
 		plt.subplots_adjust(right=0.8)
@@ -84,13 +88,23 @@ class Reader:
 			for j in range(1,221):
 				self.test_data_blocks[i].append([])
 				# Keep test data seperateed by both digits and blocks, necessary for ML Classification
-				self.test_data_blocks[i][j-1] = list(self.test_data[220*i+j])	
+				self.test_data_blocks[i][j-1] = list(self.test_data[220*i+j])
+	def seperate_digits_male_female(self):
+		for i in range(10):
+			for j in range(0, 330):
+				for frame in self.train_data_digits[i][j]:
+					self.train_data_digits_male[i].append(frame)
+				for frame in self.train_data_digits[i][j+330]:
+					self.train_data_digits_female[i].append(frame)
+			for j in range(0,110):
+				self.test_data_blocks_male[i][j] = list(self.test_data_blocks[i][j])
+				self.test_data_blocks_female[i][j] = list(self.test_data_blocks[i][j+110])
 				
 
 def main():
 	r = Reader()
 	r.read()
-	#r.plot(660*7 + 1)
+	r.plot(660*0 + 1)
 	#print(r.test_data_blocks[9][219])
 
 
