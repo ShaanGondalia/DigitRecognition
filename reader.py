@@ -37,6 +37,7 @@ class Reader:
 		self.train_mfccs = self.convert_MFCCS(self.train_data)
 		self.test_mfccs = self.convert_MFCCS(self.test_data)
 		self.seperate_digits()
+		self.seperate_digits_male_female()
 
 	def parse_lines(self, lines):
 		i=0
@@ -89,23 +90,63 @@ class Reader:
 				self.test_data_blocks[i].append([])
 				# Keep test data seperateed by both digits and blocks, necessary for ML Classification
 				self.test_data_blocks[i][j-1] = list(self.test_data[220*i+j])
+
 	def seperate_digits_male_female(self):
 		for i in range(10):
-			for j in range(0, 330):
-				for frame in self.train_data_digits[i][j]:
+			self.train_data_digits_male.append([])
+			self.train_data_digits_female.append([])
+			self.test_data_blocks_male.append([])
+			self.test_data_blocks_female.append([])
+			for j in range(1, 331):
+				for frame in self.train_data[660*i+j]:
 					self.train_data_digits_male[i].append(frame)
-				for frame in self.train_data_digits[i][j+330]:
+				for frame in self.train_data[660*i+j+330]:
 					self.train_data_digits_female[i].append(frame)
 			for j in range(0,110):
+				self.test_data_blocks_male[i].append([])
+				self.test_data_blocks_female[i].append([])
 				self.test_data_blocks_male[i][j] = list(self.test_data_blocks[i][j])
 				self.test_data_blocks_female[i][j] = list(self.test_data_blocks[i][j+110])
+
+	def plot_gender(self, digit, mfcc):
+		plt.title(f'MFCC {mfcc} vs Normalized Frame Index - Digit {digit}')
+		plt.xlabel('Normalized Frame Index (0 to 1)')
+		plt.ylabel(f'MFCC {mfcc}')
+		plt.grid(alpha=.4,linestyle='--')
+
+		male_normalized_frame_index=[]
+		male_data=[]
+		for i in range(1,101):
+			frame_length = len(self.train_mfccs[digit*660+i][mfcc-1])
+			for j, f in enumerate(self.train_mfccs[digit*660+i][mfcc-1]):
+				male_normalized_frame_index.append(j/(frame_length-1))
+				male_data.append(f)
+
+		female_normalized_frame_index=[]
+		female_data=[]
+		for i in range(331,431):
+			frame_length = len(self.train_mfccs[digit*660+i][mfcc-1])
+			for j, f in enumerate(self.train_mfccs[digit*660+i][mfcc-1]):
+				female_normalized_frame_index.append(j/(frame_length-1))
+				female_data.append(f)
+
+		plt.scatter(male_normalized_frame_index, male_data, c='blue', label='Male', s=5)
+		plt.scatter(female_normalized_frame_index, female_data, c='red', label='Female', s=5)
+
+		plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
+		plt.subplots_adjust(right=0.8)
+
+		plt.show()
 				
 
 def main():
 	r = Reader()
 	r.read()
-	r.plot(660*0 + 1)
+	#r.plot(660*0 + 1)
+	#print(len(r.train_data_digits_male[0]))
 	#print(r.test_data_blocks[9][219])
+	#print(r.train_data_digits_male)
+	r.plot_gender(2, 1)
 
 
 if __name__ == "__main__":
