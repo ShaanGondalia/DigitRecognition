@@ -106,7 +106,7 @@ class GaussianMixtureModel:
 			total_correct+=correct[digit]
 			print(f"    Digit {digit}: {correct[digit]/num_blocks}")
 		print(f"Total Accuracy: {total_correct/(num_blocks*10)}\n")
-		self._plot_confusion_matrix(confusion_matrix)
+		self._plot_confusion_matrix(confusion_matrix, title)
 
 	def _compute_cov(self, digit, labels, clusters, train_data, cov_type):
 		cov = np.empty([clusters, self.mfcc_count, self.mfcc_count])
@@ -142,7 +142,7 @@ class GaussianMixtureModel:
 		return likelihood
 
 	def _plot_confusion_matrix(self, cf_matrix, title):
-		ax = sns.heatmap(cf_matrix, annot=True, cmap='Blues', fmt='g', cbar=False)
+		ax = sns.heatmap(cf_matrix, annot=True, cmap='Blues', fmt='g', cbar=False, annot_kws={"size": 35 / np.sqrt(len(cf_matrix))})
 
 		ax.set_title(title);
 		ax.set_xlabel('Predicted Digits')
@@ -153,7 +153,9 @@ class GaussianMixtureModel:
 		ax.yaxis.set_ticklabels([0,1,2,3,4,5,6,7,8,9])
 
 		## Display the visualization of the Confusion Matrix.
-		plt.show()
+		#plt.show()
+		plt.savefig(f'{title}.png')
+		plt.clf()
 
 
 def main():
@@ -166,7 +168,6 @@ def main():
 	const_phonemes = [5]*10 # Constant number of clusters
 	phonemes = [4, 4, 5, 5, 5, 4, 4, 4, 5, 4] # Phonemes for digits 0 through 9
 	phonemes_transitions = [2*p for p in phonemes] # Phonemes + Transitions
-	plt.ion()
 
 	print("k-Means Results for 5 Clusters:")
 	m.run(const_phonemes, "k-Means with 5 Clusters", gmm_type="k-Means", cov_type="full", gender="all", mfcc_count=13)
@@ -200,12 +201,12 @@ def main():
 
 	print("EM Results for 5 Clusters, Diagonal Covariance:")
 	m.run(const_phonemes, "EM with 5 Clusters, Diagonal Covariance", gmm_type="EM", cov_type="diag", gender="all", mfcc_count=13)
-
 	print("EM Results for 5 Clusters, Spherical Covariance:")
 	m.run(const_phonemes, "EM with 5 Clusters, Spherical Covariance", gmm_type="EM", cov_type="spherical", gender="all", mfcc_count=13)
 
 	print("EM Results for 5 Clusters, Male:")
 	m.run(const_phonemes, "EM with 5 Clusters, Male", gmm_type="EM", cov_type="full", gender="male", mfcc_count=13)
+
 	print("EM Results for 5 Clusters, Female:")
 	m.run(const_phonemes, "EM with 5 Clusters, Female", gmm_type="EM", cov_type="full", gender="female", mfcc_count=13)
 
@@ -213,7 +214,6 @@ def main():
 	m.run(const_phonemes, "EM with 5 Clusters, 5 MFCCs", gmm_type="EM", cov_type="full", gender="all", mfcc_count=5)
 	print("EM Results for 5 Clusters, 9 MFCCs:")
 	m.run(const_phonemes, "EM with 5 Clusters, 9 MFCCs", gmm_type="EM", cov_type="full", gender="all", mfcc_count=9)
-
 
 if __name__ == "__main__":
 	main()
