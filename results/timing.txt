@@ -1,0 +1,36 @@
+k-Means Results for 5 Clusters:
+Elapsed Time: 1077.394835472107
+k-Means Results for Clusters = Phonemes:
+Elapsed Time: 870.0262680053711
+k-Means Results for Clusters = Phonemes + Transitions:
+Elapsed Time: 1946.6583216190338
+k-Means Results for 5 Clusters, Diagonal Covariance:
+Elapsed Time: 336.3340017795563
+k-Means Results for 5 Clusters, Spherical Covariance:
+Elapsed Time: 335.16499972343445
+k-Means Results for 5 Clusters, Male:
+Elapsed Time: 551.8204562664032
+k-Means Results for 5 Clusters, Female:
+Elapsed Time: 526.9806423187256
+k-Means Results for 5 Clusters, 5 MFCCs:
+Elapsed Time: 334.9399995803833
+k-Means Results for 5 Clusters, 9 MFCCs:
+Elapsed Time: 667.1503305435181
+EM Results for 5 Clusters:
+Elapsed Time: 1097.988998413086
+EM Results for Clusters = Phonemes:
+Elapsed Time: 870.8475470542908
+EM Results for Clusters = Phonemes + Transitions:
+Elapsed Time: 1978.1928687095642
+EM Results for 5 Clusters, Diagonal Covariance:
+Elapsed Time: 352.1674966812134
+EM Results for 5 Clusters, Spherical Covariance:
+Elapsed Time: 353.33299684524536
+EM Results for 5 Clusters, Male:
+Elapsed Time: 559.8588163852692
+EM Results for 5 Clusters, Female:
+Elapsed Time: 535.7828872203827
+EM Results for 5 Clusters, 5 MFCCs:
+Elapsed Time: 338.7784974575043
+EM Results for 5 Clusters, 9 MFCCs:
+Elapsed Time: 675.7886941432953

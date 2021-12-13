@@ -20,6 +20,7 @@ class GaussianMixtureModel:
 		self.test_data_female = test_data_female
 
 	def run(self, n_components, title, gmm_type="kmeans", cov_type="full", gender="all", mfcc_count=13):
+		start = time.time()
 		self.n_components = list(n_components)
 		self.mfcc_count = mfcc_count
 		self.means = [None]*10
@@ -108,6 +109,9 @@ class GaussianMixtureModel:
 		print(f"Total Accuracy: {total_correct/(num_blocks*10)}\n")
 		self._plot_confusion_matrix(confusion_matrix, title)
 
+		end = time.time()
+		print(f"Elapsed Time: {end-start}")
+
 	def _compute_cov(self, digit, labels, clusters, train_data, cov_type):
 		cov = np.empty([clusters, self.mfcc_count, self.mfcc_count])
 		clustered_data = [[]]*clusters
@@ -167,7 +171,7 @@ def main():
 		r.test_data_blocks_male, r.test_data_blocks_female)
 	const_phonemes = [5]*10 # Constant number of clusters
 	phonemes = [4, 4, 5, 5, 5, 4, 4, 4, 5, 4] # Phonemes for digits 0 through 9
-	phonemes_transitions = [2*p for p in phonemes] # Phonemes + Transitions
+	phonemes_transitions = [2*p - 1 for p in phonemes] # Phonemes + Transitions
 
 	print("k-Means Results for 5 Clusters:")
 	m.run(const_phonemes, "k-Means with 5 Clusters", gmm_type="k-Means", cov_type="full", gender="all", mfcc_count=13)
